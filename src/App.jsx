@@ -1,10 +1,10 @@
-// App.jsx
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage/HomePage';
 import Login from './pages/Login/Login';
 import EmployeeDashboard from './pages/Dashboard/Employee/EmployeeDashboard';
 import AdminDashboard from './pages/Dashboard/Admin/AdminDashboard';
+import AddEmployee from './pages/Dashboard/Admin/AddEmployee'; // Import AddEmployee
 import ProtectedRoute from './pages/ProtectedRoute/ProtectedRoute';
 
 function App() {
@@ -51,10 +51,19 @@ function App() {
         />
 
         <Route
-          path="/admin-dashboard/*"
+          path="/admin-dashboard"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated && userRole === 'admin'}>
               <AdminDashboard onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin-dashboard/add-employee"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated && userRole === 'admin'}>
+              <AddEmployee />
             </ProtectedRoute>
           }
         />
