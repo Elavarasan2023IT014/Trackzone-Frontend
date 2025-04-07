@@ -11,23 +11,60 @@ const Login = ({ onLoginSuccess }) => {
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (email === 'demo@gmail.com' && password === 'pass123') {
-        console.log('Employee login successful');
-        onLoginSuccess('employee');
-      } else if (email === 'admin@gmail.com' && password === 'pass123') {
-        console.log('Admin login successful');
-        onLoginSuccess('admin');
+    try {
+      // First, try the employee login endpoint
+      let response = await fetch('http://localhost:5000/api/employee/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      let data = await response.json();
+
+      if (response.ok) {
+        // Employee login successful
+        const { token, employee } = data;
+        const role = 'employee';
+        onLoginSuccess(role, token, employee);
+        navigate('/employee-dashboard');
+        return; // Exit after successful employee login
+      } else if (data.message === 'Employee not found.') {
+        // If employee not found, try admin login
+        response = await fetch('http://localhost:5000/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        data = await response.json();
+
+        if (response.ok) {
+          // Admin login successful
+          const { token, employee } = data; // Assuming admin response uses same structure
+          const role = 'admin';
+          onLoginSuccess(role, token, employee);
+          navigate('/admin-dashboard');
+          return; // Exit after successful admin login
+        } else {
+          throw new Error(data.message || 'Login failed');
+        }
       } else {
-        setError('Invalid email or password. Try demo@example.com / password123');
+        throw new Error(data.message || 'Login failed');
       }
+    } catch (err) {
+      setError(err.message || 'Server error during login.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const mapVariants = {
@@ -35,10 +72,7 @@ const Login = ({ onLoginSuccess }) => {
     animate: {
       scale: 1,
       opacity: 1,
-      transition: {
-        duration: 1.5,
-        ease: 'easeOut'
-      }
+      transition: { duration: 1.5, ease: 'easeOut' }
     }
   };
 
@@ -46,11 +80,7 @@ const Login = ({ onLoginSuccess }) => {
     animate: {
       scale: [1, 1.2, 1],
       opacity: [0.3, 0.6, 0.3],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: 'easeInOut'
-      }
+      transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
     }
   };
 
@@ -70,15 +100,8 @@ const Login = ({ onLoginSuccess }) => {
           />
           <motion.div
             className={styles.gpsPin}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [0, 10, -10, 0],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
+            animate={{ y: [0, -20, 0], rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           />
           <div className={styles.mapLines}>
             {[...Array(5)].map((_, i) => (
@@ -87,11 +110,7 @@ const Login = ({ onLoginSuccess }) => {
                 className={styles.mapLine}
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
-                transition={{
-                  duration: 2,
-                  delay: i * 0.3,
-                  ease: 'easeInOut'
-                }}
+                transition={{ duration: 2, delay: i * 0.3, ease: 'easeInOut' }}
               />
             ))}
           </div>
@@ -179,21 +198,14 @@ const Login = ({ onLoginSuccess }) => {
             </motion.button>
 
             <p className={styles.hint}>
-              Demo credentials: demo@example.com / password123
+              Demo credentials: demo@gmail.com / pass123 (Employee) | admin@gmail.com / pass123 (Admin)
             </p>
           </form>
 
           <motion.div
             className={styles.glowEffect}
-            animate={{
-              opacity: [0.2, 0.5, 0.2],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
+            animate={{ opacity: [0.2, 0.5, 0.2], scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           />
         </motion.div>
       </motion.div>
